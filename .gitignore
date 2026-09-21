@@ -34,3 +34,4 @@ Release/
 
 # Configurações locais
 appsettings.Local.json
+delphi/config/config.ini
