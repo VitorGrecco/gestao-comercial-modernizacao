@@ -1,0 +1,36 @@
+# Delphi
+*.dcu
+*.exe
+*.dll
+*.bpl
+*.dcp
+*.map
+*.local
+*.identcache
+*.stat
+*.tvsconfig
+*.dsk
+*.cfg
+*.dproj.local
+__history/
+Win32/
+Win64/
+Debug/
+Release/
+
+# .NET
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# VS Code
+.vscode/
+
+# Temporários
+*.tmp
+*.log
+
+# Configurações locais
+appsettings.Local.json
