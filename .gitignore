@@ -12,6 +12,8 @@
 *.dsk
 *.cfg
 *.dproj.local
+**/__history__/
+**/__recovery__/
 __history/
 Win32/
 Win64/
