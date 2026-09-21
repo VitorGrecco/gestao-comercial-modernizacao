@@ -1,4 +1,4 @@
-﻿unit uClienteCadastro;
+unit uClienteCadastro;
 
 interface
 
@@ -101,24 +101,11 @@ begin
   try
     if FIdCliente = 0 then
     begin
-      clienteApiService.InserirCliente(
-        Trim(edtNome.Text),
-        Trim(edtDocumento.Text),
-        Trim(edtEmail.Text),
-        Trim(edtTelefone.Text),
-        chkAtivo.Checked
-      );
+      clienteApiService.InserirCliente(Trim(edtNome.Text),Trim(edtDocumento.Text),Trim(edtEmail.Text),Trim(edtTelefone.Text),chkAtivo.Checked);
     end
     else
     begin
-      clienteApiService.AtualizarCliente(
-        FIdCliente,
-        Trim(edtNome.Text),
-        Trim(edtDocumento.Text),
-        Trim(edtEmail.Text),
-        Trim(edtTelefone.Text),
-        chkAtivo.Checked
-      );
+      clienteApiService.AtualizarCliente(FIdCliente,Trim(edtNome.Text),Trim(edtDocumento.Text),Trim(edtEmail.Text),Trim(edtTelefone.Text),chkAtivo.Checked);
     end;
 
     ModalResult := mrOk;

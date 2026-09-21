@@ -17,7 +17,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.Grids,
   Vcl.DBGrids,
-  Data.Win.ADODB;
+  Datasnap.DBClient;
 
 type
   TfrmClientes = class(TForm)
@@ -35,7 +35,7 @@ type
     procedure btnNovoClick(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
   private
-    FQryClientes: TADOQuery;
+    FClientes: TClientDataSet;
     procedure AtualizarClientes;
     procedure AjustarColunas;
   public
@@ -48,23 +48,36 @@ implementation
 
 uses
   System.UITypes,
-  uDMConexao,
-  uClienteRepository,
+  System.JSON,
+  System.DateUtils,
+  uClienteApiService,
   uClienteCadastro;
 
 {$R *.dfm}
 
 procedure TfrmClientes.FormCreate(Sender: TObject);
 begin
-  FQryClientes := TADOQuery.Create(nil);
-  FQryClientes.Connection := dmConexao.conPrincipal;
-  dsClientes.DataSet := FQryClientes;
+  FClientes := TClientDataSet.Create(nil);
+
+  FClientes.FieldDefs.Add('ID_CLIENTE', ftInteger);
+  FClientes.FieldDefs.Add('NOME', ftString, 120);
+  FClientes.FieldDefs.Add('DOCUMENTO', ftString, 20);
+  FClientes.FieldDefs.Add('EMAIL', ftString, 150);
+  FClientes.FieldDefs.Add('TELEFONE', ftString, 20);
+  FClientes.FieldDefs.Add('ATIVO', ftBoolean);
+  FClientes.FieldDefs.Add('ATIVO_DESC', ftString, 3);
+  FClientes.FieldDefs.Add('DTH_CADASTRO', ftDateTime);
+
+  FClientes.CreateDataSet;
+
+  dsClientes.DataSet := FClientes;
+
   AtualizarClientes;
 end;
 
 procedure TfrmClientes.FormDestroy(Sender: TObject);
 begin
-  FQryClientes.Free;
+  FClientes.Free;
 end;
 
 procedure TfrmClientes.FormResize(Sender: TObject);
@@ -74,17 +87,87 @@ end;
 
 procedure TfrmClientes.AtualizarClientes;
 var
-  clienteRepository: TClienteRepository;
+  clienteApiService: TClienteApiService;
+  respostaJson: string;
+  jsonValue: TJSONValue;
+  clientesJson: TJSONArray;
+  clienteJson: TJSONObject;
+  i: Integer;
+  ativo: Boolean;
 begin
-  clienteRepository := TClienteRepository.Create(dmConexao.conPrincipal);
+  clienteApiService := TClienteApiService.Create;
   try
-    clienteRepository.ListarClientes(FQryClientes);
-    TDateTimeField(FQryClientes.FieldByName('DTH_CADASTRO')).DisplayFormat :=
-      'dd/MM/yyyy HH:mm';
-    AjustarColunas;
+    respostaJson := clienteApiService.ListarClientes;
   finally
-    clienteRepository.Free;
+    clienteApiService.Free;
   end;
+
+  jsonValue := TJSONObject.ParseJSONValue(respostaJson);
+  try
+    if not (jsonValue is TJSONArray) then
+    begin
+      ShowMessage('A API retornou um formato inválido.');
+      Exit;
+    end;
+
+    clientesJson := TJSONArray(jsonValue);
+
+    FClientes.DisableControls;
+    try
+      FClientes.EmptyDataSet;
+
+      for i := 0 to clientesJson.Count - 1 do
+      begin
+        clienteJson := clientesJson.Items[i] as TJSONObject;
+
+        ativo := clienteJson.GetValue<Boolean>('ativo');
+
+        FClientes.Append;
+
+        FClientes.FieldByName('ID_CLIENTE').AsInteger :=
+          clienteJson.GetValue<Integer>('idCliente');
+
+        FClientes.FieldByName('NOME').AsString :=
+          clienteJson.GetValue<string>('nome');
+
+        FClientes.FieldByName('DOCUMENTO').AsString :=
+          clienteJson.GetValue<string>('documento');
+
+        FClientes.FieldByName('EMAIL').AsString :=
+          clienteJson.GetValue<string>('email');
+
+        FClientes.FieldByName('TELEFONE').AsString :=
+          clienteJson.GetValue<string>('telefone');
+
+        FClientes.FieldByName('ATIVO').AsBoolean := ativo;
+
+        if ativo then
+          FClientes.FieldByName('ATIVO_DESC').AsString := 'Sim'
+        else
+          FClientes.FieldByName('ATIVO_DESC').AsString := 'Não';
+
+        FClientes.FieldByName('DTH_CADASTRO').AsDateTime :=
+          ISO8601ToDate(
+            clienteJson.GetValue<string>('dataCadastro'),
+            False
+          );
+
+        FClientes.Post;
+      end;
+
+      TDateTimeField(
+        FClientes.FieldByName('DTH_CADASTRO')
+      ).DisplayFormat := 'dd/MM/yyyy HH:mm';
+
+    finally
+      FClientes.EnableControls;
+    end;
+
+  finally
+    jsonValue.Free;
+  end;
+
+  AjustarColunas;
 end;
 
 procedure TfrmClientes.AjustarColunas;
@@ -126,13 +209,13 @@ procedure TfrmClientes.btnEditarClick(Sender: TObject);
 var
   idCliente: Integer;
 begin
-  if FQryClientes.IsEmpty then
+  if FClientes.IsEmpty then
   begin
     ShowMessage('Não há cliente selecionado para edição.');
     Exit;
   end;
 
-  idCliente := FQryClientes.FieldByName('ID_CLIENTE').AsInteger;
+  idCliente := FClientes.FieldByName('ID_CLIENTE').AsInteger;
 
   frmClienteCadastro := TfrmClienteCadastro.Create(nil);
   try

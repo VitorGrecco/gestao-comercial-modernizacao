@@ -25,7 +25,6 @@ object frmClientes: TfrmClientes
     Color = clWhite
     ParentBackground = False
     TabOrder = 0
-    ExplicitTop = -6
     object lblTitulo: TLabel
       Left = 24
       Top = 20

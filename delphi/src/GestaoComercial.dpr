@@ -12,7 +12,8 @@ uses
   uUsuarioCadastro in 'Forms\uUsuarioCadastro.pas' {frmUsuarioCadastro},
   uClientes in 'Forms\uClientes.pas' {frmClientes},
   uClienteCadastro in 'Forms\uClienteCadastro.pas' {frmClienteCadastro},
-  uClienteRepository in 'Repositories\uClienteRepository.pas';
+  uClienteRepository in 'Repositories\uClienteRepository.pas',
+  uClienteApiService in 'Services\uClienteApiService.pas';
 
 {$R *.res}
 
